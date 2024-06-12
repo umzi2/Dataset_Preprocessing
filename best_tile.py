@@ -3,6 +3,8 @@ import numpy as np
 from pepeline import read, save, cvt_color, CvtType, best_tile
 import cv2
 from tqdm.contrib.concurrent import process_map, thread_map
+from chainner_ext import resize, ResizeFilter
+
 
 class BestTile:
     """
@@ -20,7 +22,8 @@ class BestTile:
     - `run()`: Run the processing on all images using the specified processing type.
     """
 
-    def __init__(self, in_folder: str, out_folder: str, tile_size: int = 512, process_type: str = "thread"):
+    def __init__(self, in_folder: str, out_folder: str, tile_size: int = 512, process_type: str = "thread",
+                 scale: int = 1):
         """
         Initialize the BestTile class.
 
@@ -30,6 +33,7 @@ class BestTile:
         - `tile_size` (int): Size of the tile to extract. Default is 512.
         - `process_type` (str): Type of processing ('thread', 'process', or 'for'). Default is 'thread'.
         """
+        self.scale = scale
         self.in_folder = in_folder
         self.out_folder = out_folder
         if not os.path.exists(out_folder):
@@ -52,11 +56,17 @@ class BestTile:
         if img_shape[0] == self.tile_size or img_shape[1] == self.tile_size:
             save(img, os.path.join(self.out_folder, img_name))
             return
+        result_name = ".".join(img_name.split(".")[:-1]) + ".png"
         img_gray = cvt_color(img, CvtType.RGB2GrayBt2020)
         laplacian_abs = np.abs(cv2.Laplacian(img_gray, -1))
-        left_up_cord = best_tile(laplacian_abs, self.tile_size)
+        if self.scale > 1:
+            laplacian_abs = resize(laplacian_abs, (img_shape[1] // self.scale, img_shape[0] // 4),
+                                   ResizeFilter.Box, False).squeeze()
+            left_up_cord = best_tile(laplacian_abs, self.tile_size // self.scale) * self.scale
+        else:
+            left_up_cord = best_tile(laplacian_abs, self.tile_size // self.scale)
         save(img[left_up_cord[0]:left_up_cord[0] + self.tile_size, left_up_cord[1]:left_up_cord[1] + self.tile_size],
-             os.path.join(self.out_folder, img_name))
+             os.path.join(self.out_folder, result_name))
 
     def run(self):
         """

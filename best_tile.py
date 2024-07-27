@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from pepeline import read, save, cvt_color, CvtType, best_tile
+from pepeline import read, save, cvt_color, CvtType, best_tile, ImgColor, ImgFormat
 import cv2
 from tqdm.contrib.concurrent import process_map, thread_map
 from chainner_ext import resize, ResizeFilter
@@ -49,7 +49,7 @@ class BestTile:
         Args:
         - `img_name` (str): Name of the image file to process.
         """
-        img = read(os.path.join(self.in_folder, img_name), 1, 0)
+        img = read(os.path.join(self.in_folder, img_name), ImgColor.RGB, ImgFormat.F32)
         img_shape = img.shape
         if img_shape[0] < self.tile_size or img_shape[1] < self.tile_size:
             return

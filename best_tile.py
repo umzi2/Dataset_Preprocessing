@@ -60,7 +60,7 @@ class BestTile:
         img_gray = cvt_color(img, CvtType.RGB2GrayBt2020)
         laplacian_abs = np.abs(cv2.Laplacian(img_gray, -1))
         if self.scale > 1:
-            laplacian_abs = resize(laplacian_abs, (img_shape[1] // self.scale, img_shape[0] // 4),
+            laplacian_abs = resize(laplacian_abs, (img_shape[1] // self.scale, img_shape[0] // self.scale),
                                    ResizeFilter.Box, False).squeeze()
             left_up_cord = best_tile(laplacian_abs, self.tile_size // self.scale) * self.scale
         else:

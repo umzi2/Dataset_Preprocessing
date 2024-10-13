@@ -5,9 +5,7 @@ import cv2
 from tqdm.contrib.concurrent import process_map, thread_map
 from tqdm import tqdm
 from chainner_ext import resize, ResizeFilter
-from pyiqa import create_metric
-import torch
-from module import image2tensor, empty_cuda_cache
+
 
 
 class BestTile:
@@ -26,7 +24,7 @@ class BestTile:
     - `run()`: Run the processing on all images using the specified processing type.
     """
 
-    def __init__(self, in_folder: str, out_folder: str, tile_size: int = 512,hyper_iqa_thread:float = 0.56, process_type: str = "thread",
+    def __init__(self, in_folder: str, out_folder: str, tile_size: int = 512, process_type: str = "thread",
                  scale: int = 1):
         """
         Initialize the BestTile class.
@@ -42,22 +40,12 @@ class BestTile:
         self.out_folder = out_folder
         if not os.path.exists(out_folder):
             os.makedirs(out_folder)
+        self.out_list = os.listdir(out_folder)
         self.tile_size = tile_size
         self.all_images = os.listdir(in_folder)
         self.process_type = process_type
-        self.hyper_iqa_thread = hyper_iqa_thread
-        if hyper_iqa_thread > 0:
-            if torch.cuda.is_available():
-                self.process_type = "for"
-                self.device = torch.device("cuda")
-            else:
-                self.device = torch.device("cpu")
-            self.hyper_iqa = create_metric("hyperiqa", device=self.device)
 
     def save_result(self,img,img_name)->None:
-        if self.hyper_iqa_thread > 0:
-            if self.hyper_iqa(image2tensor(img).to(self.device).unsqueeze(0)) < self.hyper_iqa_thread:
-                return
         save(img,os.path.join(self.out_folder, img_name))
 
     def process(self, img_name: str):
@@ -67,6 +55,8 @@ class BestTile:
         Args:
         - `img_name` (str): Name of the image file to process.
         """
+        if img_name in self.out_list:
+            return
         img = read(os.path.join(self.in_folder, img_name), ImgColor.RGB, ImgFormat.F32)
         img_shape = img.shape
         if img_shape[0] < self.tile_size or img_shape[1] < self.tile_size:
@@ -76,13 +66,15 @@ class BestTile:
             self.save_result(img,result_name)
             return
         img_gray = cvt_color(img, CvtType.RGB2GrayBt2020)
-        laplacian_abs = np.abs(cv2.Laplacian(img_gray, -1))
         if self.scale > 1:
-            laplacian_abs = resize(laplacian_abs, (img_shape[1] // self.scale, img_shape[0] // self.scale),
-                                   ResizeFilter.Box, False).squeeze()
-            left_up_cord = best_tile(laplacian_abs, self.tile_size // self.scale) * self.scale
-        else:
+            img_gray = resize(img_gray, (img_shape[1] // self.scale, img_shape[0] // self.scale),
+                                   ResizeFilter.Linear, False)
+            laplacian_abs = np.abs(cv2.Laplacian(img_gray, -1))
             left_up_cord = best_tile(laplacian_abs, self.tile_size // self.scale)
+            left_up_cord = [index*self.scale for index in left_up_cord]
+        else:
+            laplacian_abs = np.abs(cv2.Laplacian(img_gray, -1))
+            left_up_cord = best_tile(laplacian_abs, self.tile_size )
         img = img[left_up_cord[0]:left_up_cord[0] + self.tile_size, left_up_cord[1]:left_up_cord[1] + self.tile_size]
         self.save_result(img,result_name)
 
@@ -97,5 +89,3 @@ class BestTile:
         else:
             for img_name in tqdm(self.all_images):
                 self.process(img_name)
-        if self.hyper_iqa_thread > 0:
-            empty_cuda_cache()

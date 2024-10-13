@@ -1,33 +1,24 @@
-import numpy as np
+import os
+from pepeline import read,ImgFormat
 import torch
-from torch import Tensor
+from torch.utils.data import Dataset
 
 
-def empty_cuda_cache():
-    torch.cuda.empty_cache()
-    torch.cuda.ipc_collect()
+class ImageDataset(Dataset):
+    def __init__(self, image_dir,device, transform=None ):
+        self.image_dir = image_dir
+        self.transform = transform
+        self.image_files = [f for f in os.listdir(image_dir) if f.endswith(('.png', '.jpg', '.jpeg'))]
+        self.device = device
 
+    def __len__(self):
+        return len(self.image_files)
 
-def image2tensor(
-    value: list[np.ndarray] | np.ndarray,
-    out_type: torch.dtype = torch.float32,
-) -> list[Tensor] | Tensor:
-    def _to_tensor(img: np.ndarray) -> torch.Tensor:
-        if img.dtype == np.uint8:
-            img = img.astype(np.float32) / 255.0
+    def __getitem__(self, idx):
+        img_path = os.path.join(self.image_dir, self.image_files[idx])
+        image = read(img_path,format=ImgFormat.F32)  # Using OpenCV to read the image
+        image = torch.tensor(image, dtype=torch.float32).permute(2, 0, 1)
+        if self.transform:
+            image = self.transform(image)
 
-        if len(img.shape) == 2:
-            tensor = torch.from_numpy(img[None, ...])
-        else:
-            tensor = torch.from_numpy(img.transpose(2, 0, 1))
-
-        if tensor.dtype != out_type:
-            tensor = tensor.to(out_type)
-
-        return tensor
-
-    if isinstance(value, list):
-        return [_to_tensor(i) for i in value]
-    else:
-        return _to_tensor(value)
-
+        return image, self.image_files[idx]

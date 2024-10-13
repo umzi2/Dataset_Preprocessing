@@ -18,8 +18,8 @@ class HyperThread:
         self.data_loader = DataLoader(dataset,batch_size=batch_size)
         self.thread = thread
         self.move_folder = move_folder
-        if not move_folder is None and not os.path.exists(move_folder):
-            os.makedirs(move_folder)
+        if not move_folder is None :
+            os.makedirs(move_folder,exist_ok=True)
 
     def run(self):
         for images, filenames in tqdm(self.data_loader):

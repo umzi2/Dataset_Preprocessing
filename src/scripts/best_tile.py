@@ -24,7 +24,7 @@ class BestTile:
     - `run()`: Run the processing on all images using the specified processing type.
     """
 
-    def __init__(self, in_folder: str, out_folder: str, tile_size: int = 512, process_type: str = "thread",
+    def __init__(self, in_folder: str, out_folder: str, tile_size: int = 512, process_type: str = "process",
                  scale: int = 1):
         """
         Initialize the BestTile class.
@@ -38,8 +38,7 @@ class BestTile:
         self.scale = scale
         self.in_folder = in_folder
         self.out_folder = out_folder
-        if not os.path.exists(out_folder):
-            os.makedirs(out_folder)
+        os.makedirs(out_folder,exist_ok=True)
         self.out_list = os.listdir(out_folder)
         self.tile_size = tile_size
         self.all_images = os.listdir(in_folder)

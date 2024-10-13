@@ -13,7 +13,7 @@ class AniIQAThread:
         preprocess = transforms.Compose([
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
-        dataset = ImageDataset(img_dir, device,preprocess)
+        dataset = ImageDataset(img_dir, device, preprocess)
 
         self.img_dir = img_dir
         self.model = torch.hub.load(repo_or_dir="miccunifi/ARNIQA", source="github", model="ARNIQA",
@@ -23,8 +23,8 @@ class AniIQAThread:
         self.data_loader = DataLoader(dataset,batch_size=batch_size)
         self.thread = thread
         self.move_folder = move_folder
-        if not move_folder is None and not os.path.exists(move_folder):
-            os.makedirs(move_folder)
+        if not move_folder is None :
+            os.makedirs(move_folder, exist_ok=True)
 
     def run(self):
         for images, filenames in tqdm(self.data_loader):

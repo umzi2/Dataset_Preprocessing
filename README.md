@@ -1,1 +1,1 @@
-A simple script to determine the best tile by the number of details using the Laplace operator.
+A small collection of scripts for initial dataset processing.

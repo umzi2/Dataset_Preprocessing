@@ -1,22 +1,28 @@
-from src.scripts.best_tile import BestTile
+from src.enum import ProcessType
+from src.scripts.utils.best_tile import BestTile
 
-input_folder = "/run/media/umzi/H/mahoudb/"
-output_folder = "/run/media/umzi/H/mahoudb33/"
-tile_size = 512
-process_type = "thread"
-scale = 1
-tile_thread = False
+input_folder = ""
+output_folder = ""
+tile_size = 256
+process_type = ProcessType.THREAD
+scale = 4
+dynamic_number_tile = True
+median_blur = 5
+laplacian_thread = 0.01
+image_gray = True
+tile_thread = True
 
-bt = BestTile(input_folder, output_folder, tile_size, process_type, scale)
-bt.run()
+best_tile = BestTile(input_folder, output_folder, tile_size, process_type, scale, dynamic_number_tile, median_blur, laplacian_thread, image_gray)
+best_tile.run()
 
-if tile_thread:
-    from src.enum import ThreadAlg
-    thread = 0.5
-    batch_size = 16
-    move_folder = None # ""
-    thread_in_folder = output_folder
-    thread_type = ThreadAlg.HIPERIQA
-
-    alg = thread_type.value(output_folder, batch_size, thread, move_folder)
-    alg.run()
+# if tile_thread:
+#     from src.torch_enum import ThreadAlg
+#
+#     thread = 0.5
+#     batch_size = 25
+#     move_folder = None
+#     thread_in_folder = output_folder
+#     thread_type = ThreadAlg.HIPERIQA
+#
+#     alg = thread_type.value(output_folder, batch_size, thread, move_folder)
+#     alg()

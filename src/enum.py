@@ -1,8 +1,7 @@
 from enum import Enum
 
-from src.scripts.aniiqa import AniIQAThread
-from src.scripts.fast_hyper import HyperThread
+class ProcessType(Enum):
+    PROCESS = 0
+    THREAD = 1
+    FOR = 2
 
-class ThreadAlg(Enum):
-    HIPERIQA = HyperThread
-    ANIIQA = AniIQAThread

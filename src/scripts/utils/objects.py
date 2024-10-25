@@ -64,6 +64,9 @@ class IQANode:
                 else:
                     if iqa[index]>self.thread:
                         self.thread_list.append(Thread(name=file_name, thread=float(iqa_value)))
+                    else:
+                        if not self.move_folder:
+                            os.remove(os.path.join(self.img_dir,file_name))
         if self.thread_list:
             self.thread_list.sort()
             clip_index = int(len(self.thread_list) * self.median_thread)

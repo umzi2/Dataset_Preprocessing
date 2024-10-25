@@ -3,7 +3,7 @@ import shutil
 import torch
 from torch.utils.data import DataLoader
 
-from module import ImageDataset
+from .module import ImageDataset
 from tqdm import tqdm
 
 class Thread:

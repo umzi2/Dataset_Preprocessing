@@ -9,9 +9,19 @@ scale = 4
 dynamic_number_tile = True
 median_blur = 5
 laplacian_thread = 0.01
-image_gray = True
+image_gray = False
 
-best_tile = BestTile(input_folder, output_folder, tile_size, process_type, scale, dynamic_number_tile, median_blur, laplacian_thread, image_gray)
+best_tile = BestTile(
+    input_folder,
+    output_folder,
+    tile_size,
+    process_type,
+    scale,
+    dynamic_number_tile,
+    median_blur,
+    laplacian_thread,
+    image_gray,
+)
 best_tile.run()
 
 tile_thread = True

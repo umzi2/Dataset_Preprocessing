@@ -49,6 +49,7 @@ class IQANode:
         median_thread=0,
         move_folder: str | None = None,
         transform=None,
+        reverse=False,
     ):
         self.device = (
             torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -57,6 +58,7 @@ class IQANode:
         self.data_loader = DataLoader(dataset, batch_size=batch_size)
         self.img_dir: str = img_dir
         self.thread = thread
+        self.reverse = reverse
         self.move_folder = move_folder
         if move_folder is not None:
             import os
@@ -92,7 +94,7 @@ class IQANode:
                         if not self.move_folder:
                             os.remove(os.path.join(self.img_dir, file_name))
         if self.thread_list:
-            self.thread_list.sort()
+            self.thread_list.sort(self.reverse)
             clip_index = int(len(self.thread_list) * self.median_thread)
             if self.move_folder:
                 for thread in self.thread_list[-clip_index:]:

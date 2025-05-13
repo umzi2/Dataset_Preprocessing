@@ -2,8 +2,6 @@ import numpy as np
 import torch
 import torch.fft
 
-from src.scripts.utils.objects import IQANode
-
 DEFAULT_BLOCK_SIZE = 8
 
 
@@ -280,7 +278,7 @@ def blockwise_dct(
 
 
 def calculate_image_blockiness(
-    gray_images: torch.Tensor,
+    rgb_images: torch.Tensor,
     block_size: int = DEFAULT_BLOCK_SIZE,
 ):
     """Calculate the blockiness metric for a batch of grayscale images.
@@ -290,7 +288,7 @@ def calculate_image_blockiness(
     4 pixels in both spatial dimensions.
 
     Args:
-        gray_images: A 4D tensor with shape (B, 1, H, W) representing a batch of grayscale images.
+        rgb_images: A 4D tensor with shape (B, 1, H, W) representing a batch of grayscale images.
         block_size: The size of each block used for the DCT computation. Defaults to DEFAULT_BLOCK_SIZE.
 
     Returns:
@@ -302,6 +300,7 @@ def calculate_image_blockiness(
                     are too small for offset calculation.
         RuntimeError: If any of the intermediate calculations fail.
     """
+    gray_images = rgb_to_grayscale(rgb_images)
     if not isinstance(gray_images, torch.Tensor):
         raise TypeError("gray_images must be a torch.Tensor.")
     if gray_images.dim() != 4:
@@ -368,22 +367,3 @@ def rgb_to_grayscale(tensor):
     # (B, 1, H, W)
     grayscale = (tensor * weights).sum(dim=1, keepdim=True)
     return grayscale
-
-
-class BlockinessThread(IQANode):
-    def __init__(
-        self,
-        img_dir,
-        batch_size: int = 8,
-        thread: float = 0.5,
-        median_thread=0,
-        move_folder: str | None = None,
-    ):
-        super().__init__(
-            img_dir, batch_size, thread, median_thread, move_folder, None, reverse=True
-        )
-        self.model = calculate_image_blockiness
-
-    def forward(self, images):
-        images = rgb_to_grayscale(images)
-        return self.model(images)

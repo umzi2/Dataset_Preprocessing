@@ -1,12 +1,12 @@
 import os
-import numpy as np
-from pepeline import read, save, cvt_color, CvtType, best_tile, ImgColor, ImgFormat
-import cv2
+from pepeline import read, save, best_tile, ImgColor, ImgFormat
 from tqdm.contrib.concurrent import process_map, thread_map
 from tqdm import tqdm
 from chainner_ext import resize, ResizeFilter
 
 from src.enum import ProcessType
+from src.scripts.utils.complexity.laplacian import LaplacianComplexity
+from src.scripts.utils.complexity.object import BaseComplexity
 
 
 class BestTile:
@@ -33,9 +33,9 @@ class BestTile:
         process_type: ProcessType = ProcessType.THREAD,
         scale: int = 1,
         dynamic_n_tiles: bool = True,
-        median_blur: int = 0,
         laplacian_thread: float = 0,
         image_gray: bool = False,
+        func: BaseComplexity = LaplacianComplexity(),
     ):
         """
         Initialize the BestTile class.
@@ -49,40 +49,35 @@ class BestTile:
         self.all_images = os.listdir(in_folder)
         self.process_type = process_type
         self.dynamic_n_tiles = dynamic_n_tiles
-        self.median_blur = median_blur if median_blur % 2 == 1 else median_blur + 1
+
         self.laplacian_thread = laplacian_thread
         self.image_gray = image_gray
+        self.func = func
+        if func.type() == "IC9600":
+            self.process_type = ProcessType.FOR
 
     def save_result(self, img, img_name) -> None:
         save(img, os.path.join(self.out_folder, img_name))
 
-    def get_tile(self, img, laplacian_abs):
-        img_shape = laplacian_abs.shape
-        if self.scale > 1:
-            laplacian_abs_r = resize(
-                laplacian_abs,
+    def get_tile(self, img, complexity):
+        if self.func.type() != "Laplacian":
+            left_up_cord = best_tile(complexity[0], self.tile_size // 8)
+        elif self.scale > 1:
+            img_shape = complexity.shape
+            complexity_r = resize(
+                complexity,
                 (img_shape[1] // self.scale, img_shape[0] // self.scale),
                 ResizeFilter.Linear,
                 False,
             ).squeeze()
-            left_up_cord = best_tile(laplacian_abs_r, self.tile_size // self.scale)
+            left_up_cord = best_tile(complexity_r, self.tile_size // self.scale)
             left_up_cord = [index * self.scale for index in left_up_cord]
         else:
-            left_up_cord = best_tile(laplacian_abs, self.tile_size)
-        img = img[
-            left_up_cord[0] : left_up_cord[0] + self.tile_size,
-            left_up_cord[1] : left_up_cord[1] + self.tile_size,
-        ]
-        laplacian_abs[
-            left_up_cord[0] : left_up_cord[0] + self.tile_size,
-            left_up_cord[1] : left_up_cord[1] + self.tile_size,
-        ] = -1.0
-        return img, laplacian_abs
-
-    def image_to_gray(self, image):
-        if self.image_gray:
-            return image
-        return cvt_color(image, CvtType.RGB2GrayBt2020)
+            left_up_cord = best_tile(complexity, self.tile_size)
+        img, laplacian, score = self.func.get_tile_comp_score(
+            img, complexity, left_up_cord[0], left_up_cord[1], self.tile_size
+        )
+        return img, laplacian, score
 
     def read_img(self, img_name):
         image = read(
@@ -91,29 +86,6 @@ class BestTile:
             ImgFormat.F32,
         )
         return image
-
-    @staticmethod
-    def laplacian_abs(image):
-        return np.abs(cv2.Laplacian(image, -1))
-
-    def median_laplacian(self, image):
-        if self.median_blur <= 5:
-            image = cv2.medianBlur(image, self.median_blur)
-        else:
-            image = (
-                cv2.medianBlur((image * 255).astype(np.uint8), self.median_blur).astype(
-                    np.float32
-                )
-                / 255
-            )
-        return self.laplacian_abs(image)
-
-    def laplacian_image(self, image):
-        img_gray = self.image_to_gray(image)
-        if self.median_blur:
-            return self.median_laplacian(img_gray)
-        else:
-            return self.laplacian_abs(img_gray)
 
     def process(self, img_name: str):
         """
@@ -133,7 +105,7 @@ class BestTile:
             if img_shape[0] == self.tile_size and img_shape[1] == self.tile_size:
                 self.save_result(img, result_name)
                 return
-            laplacian_abs = self.laplacian_image(img)
+            complexity = self.func(img)
             if (
                 img_shape[0] * img_shape[1] > self.tile_size**2 * 4
                 and self.dynamic_n_tiles
@@ -141,19 +113,17 @@ class BestTile:
                 for i in range(
                     (img_shape[0] * img_shape[1]) // (self.tile_size**2 * 2)
                 ):
-                    tile, laplacian_abs = self.get_tile(img, laplacian_abs)
+                    tile, laplacian_abs, score = self.get_tile(img, complexity)
                     if self.laplacian_thread:
-                        laplacian_tile = np.mean(self.laplacian_image(tile))
-                        if laplacian_tile < self.laplacian_thread:
+                        if score < self.laplacian_thread:
                             break
                     self.save_result(
                         tile, ".".join(img_name.split(".")[:-1]) + f"_{i}" + ".png"
                     )
             else:
-                tile, laplacian_abs = self.get_tile(img, laplacian_abs)
+                tile, laplacian_abs, score = self.get_tile(img, complexity)
                 if self.laplacian_thread:
-                    laplacian_tile = np.mean(self.laplacian_image(tile))
-                    if laplacian_tile < self.laplacian_thread:
+                    if score < self.laplacian_thread:
                         return
                 self.save_result(tile, result_name)
         except Exception as e:

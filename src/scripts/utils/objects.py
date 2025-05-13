@@ -70,6 +70,12 @@ class IQANode:
         else:
             self.thread_list = None
 
+    def forward(self, images):
+        raise NotImplementedError(
+            "The forward method must be implemented in a subclass"
+        )
+
+    @torch.inference_mode()
     def __call__(self):
         for images, filenames in tqdm(self.data_loader):
             iqa = self.forward(images)
@@ -86,7 +92,9 @@ class IQANode:
                     elif iqa[index] < self.thread and not self.move_folder:
                         os.remove(os.path.join(self.img_dir, file_name))
                 else:
-                    if iqa[index] > self.thread:
+                    if (iqa[index] > self.thread and not self.reverse) or (
+                        iqa[index] < self.thread and self.reverse
+                    ):
                         self.thread_list.append(
                             Thread(name=file_name, thread=float(iqa_value))
                         )

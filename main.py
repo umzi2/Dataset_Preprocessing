@@ -1,5 +1,6 @@
 from src.enum import ProcessType
 from src.scripts.utils.best_tile import BestTile
+from src.scripts.utils.complexity.laplacian import LaplacianComplexity
 
 input_folder = ""
 output_folder = ""
@@ -18,23 +19,23 @@ best_tile = BestTile(
     process_type,
     scale,
     dynamic_number_tile,
-    median_blur,
     laplacian_thread,
     image_gray,
+    LaplacianComplexity(median_blur)
 )
 best_tile.run()
 
 tile_thread = True
-#
-# if tile_thread:
-#     from src.torch_enum import ThreadAlg
-#
-#     thread = 0.5
-#     median_thread = 0
-#     batch_size = 25
-#     move_folder = None
-#     thread_in_folder = output_folder
-#     thread_type = ThreadAlg.HIPERIQA
-#
-#     alg = thread_type.value(output_folder, batch_size, thread, median_thread, move_folder)
-#     alg()
+
+if tile_thread:
+    from src.torch_enum import ThreadAlg
+
+    thread = 0.5
+    median_thread = 0
+    batch_size = 25
+    move_folder = None
+    thread_in_folder = output_folder
+    thread_type = ThreadAlg.HIPERIQA
+
+    alg = thread_type.value(output_folder, batch_size, thread, median_thread, move_folder)
+    alg()

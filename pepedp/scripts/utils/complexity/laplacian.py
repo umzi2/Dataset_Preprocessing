@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from src.scripts.utils.complexity.object import BaseComplexity
+from pepedp.scripts.utils.complexity.object import BaseComplexity
 
 
 class LaplacianComplexity(BaseComplexity):

@@ -1,9 +1,9 @@
 from pyiqa import create_metric
 
-from src.scripts.utils.objects import IQANode
+from pepedp.scripts.utils.objects import IQANode
 
 
-class HyperThread(IQANode):
+class TopIQThread(IQANode):
     def __init__(
         self,
         img_dir,
@@ -13,7 +13,7 @@ class HyperThread(IQANode):
         move_folder: str | None = None,
     ):
         super().__init__(img_dir, batch_size, thread, median_thread, move_folder, None)
-        self.model = create_metric("hyperiqa", device=self.device)
+        self.model = create_metric("topiq_nr", device=self.device)
 
     def forward(self, images):
         return self.model(images)

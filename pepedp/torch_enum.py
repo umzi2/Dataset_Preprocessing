@@ -1,5 +1,5 @@
 from enum import Enum
-from src.scripts.iqa import (
+from pepedp.scripts.iqa import (
     HyperThread,
     AnIQAThread,
     TopIQThread,

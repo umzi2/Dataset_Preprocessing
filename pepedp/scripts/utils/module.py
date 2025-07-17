@@ -16,7 +16,7 @@ class ImageDataset(Dataset):
 
     def __getitem__(self, idx):
         img_path = os.path.join(self.image_dir, self.image_files[idx])
-        image = read(img_path, format=ImgFormat.F32)
+        image = read(img_path, img_format=ImgFormat.F32)
         image = torch.tensor(image, dtype=torch.float32, device=self.device).permute(
             2, 0, 1
         )

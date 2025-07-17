@@ -1,5 +1,5 @@
-from src.scripts.archs.blocklines import calculate_image_blockiness
-from src.scripts.utils.objects import IQANode
+from pepedp.scripts.archs.blocklines import calculate_image_blockiness
+from pepedp.scripts.utils.objects import IQANode
 
 
 class BlockinessThread(IQANode):

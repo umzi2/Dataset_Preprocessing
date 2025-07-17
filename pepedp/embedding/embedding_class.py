@@ -1,7 +1,7 @@
 import torch
-from chainner_ext import resize, ResizeFilter
-from src.embedding.convnext import convnext_small, convnext_large
-from src.embedding.enum import EmbeddedModel
+from pepeline import resize, ResizesFilter, ResizesAlg
+from pepedp.embedding.convnext import convnext_small, convnext_large
+from pepedp.embedding.enum import EmbeddedModel
 import torch.nn.functional as F
 
 
@@ -59,7 +59,11 @@ class ImgToEmbedding:
         if self.scale > 1:
             h, w = x.shape[:2]
             x = resize(
-                x, (w // self.scale, h // self.scale), ResizeFilter.CubicCatrom, False
+                x,
+                h // self.scale,
+                w // self.scale,
+                ResizesAlg.Conv(ResizesFilter.Bilinear),
+                False,
             )
         with torch.amp.autocast(self.device.__str__(), torch.float16, self.amp):
             x = self.img_to_tensor(x)

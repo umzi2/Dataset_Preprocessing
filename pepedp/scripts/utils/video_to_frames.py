@@ -5,8 +5,8 @@ import numpy as np
 
 from tqdm import tqdm
 
-from src.embedding.embedding_class import ImgToEmbedding
-from src.scripts.utils.distance import euclid_dist
+from pepedp.embedding.embedding_class import ImgToEmbedding
+from pepedp.scripts.utils.distance import euclid_dist
 
 
 class VideoToFrame:
@@ -41,7 +41,7 @@ class VideoToFrame:
                         cv2.cvtColor(frame, cv2.COLOR_BGR2RGB).astype(np.float32)
                         / 255.0
                     )
-                    if self.distance_func(ref, temp_embedd) > self.thread:
+                    if self.distance_func(ref, temp_embedd).squ > self.thread:
                         cv2.imwrite(os.path.join(out_path, f"frame_{n}.png"), frame)
                         ref = temp_embedd
                 n += 1

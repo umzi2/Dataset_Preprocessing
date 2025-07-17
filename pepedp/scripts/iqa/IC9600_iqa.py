@@ -1,5 +1,7 @@
-from src.scripts.archs.ICNet import ic9600
-from src.scripts.utils.objects import IQANode
+import torch.amp
+
+from pepedp.scripts.archs.ICNet import ic9600
+from pepedp.scripts.utils.objects import IQANode
 
 
 class IC9600Thread(IQANode):
@@ -14,5 +16,7 @@ class IC9600Thread(IQANode):
         super().__init__(img_dir, batch_size, thread, median_thread, move_folder, None)
         self.model = ic9600().to(self.device)
 
+    @torch.autocast("cuda", torch.float16)
+    @torch.no_grad()
     def forward(self, images):
-        return self.model.get_onlu_score(images)
+        return self.model.get_only_score(images)

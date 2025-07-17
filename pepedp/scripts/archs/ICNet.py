@@ -144,7 +144,7 @@ class ICNet(nn.Module):
         mod_pad_w = (scaled_size - w % scaled_size) % scaled_size
         return F.pad(x, (0, mod_pad_w, 0, mod_pad_h), "reflect")
 
-    def get_onlu_score(self, x1):
+    def get_only_score(self, x1):
         x_cat = self.body_forward(x1)
         return self.score(x_cat)
 

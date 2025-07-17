@@ -2,8 +2,8 @@ import cv2
 import numpy as np
 import torch
 
-from src.scripts.archs.ICNet import ic9600
-from src.scripts.utils.complexity.object import BaseComplexity
+from pepedp.scripts.archs.ICNet import ic9600
+from pepedp.scripts.utils.complexity.object import BaseComplexity
 
 
 class IC9600Complexity(BaseComplexity):

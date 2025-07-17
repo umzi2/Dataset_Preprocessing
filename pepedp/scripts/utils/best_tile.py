@@ -1,12 +1,19 @@
 import os
-from pepeline import read, save, best_tile, ImgColor, ImgFormat
+from pepeline import (
+    read,
+    save,
+    best_tile,
+    ImgColor,
+    ImgFormat,
+    ResizesFilter,
+    ResizesAlg,
+    resize,
+)
 from tqdm.contrib.concurrent import process_map, thread_map
 from tqdm import tqdm
-from chainner_ext import resize, ResizeFilter
-
-from src.enum import ProcessType
-from src.scripts.utils.complexity.laplacian import LaplacianComplexity
-from src.scripts.utils.complexity.object import BaseComplexity
+from pepedp.enum import ProcessType
+from pepedp.scripts.utils.complexity.laplacian import LaplacianComplexity
+from pepedp.scripts.utils.complexity.object import BaseComplexity
 
 
 class BestTile:
@@ -66,8 +73,9 @@ class BestTile:
             img_shape = complexity.shape
             complexity_r = resize(
                 complexity,
-                (img_shape[1] // self.scale, img_shape[0] // self.scale),
-                ResizeFilter.Linear,
+                img_shape[0] // self.scale,
+                img_shape[1] // self.scale,
+                ResizesAlg.Conv(ResizesFilter.Bilinear),
                 False,
             ).squeeze()
             left_up_cord = best_tile(complexity_r, self.tile_size // self.scale)

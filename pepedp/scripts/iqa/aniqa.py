@@ -1,6 +1,6 @@
 import torch
 from torchvision.transforms import transforms
-from src.scripts.utils.objects import IQANode
+from pepedp.scripts.utils.objects import IQANode
 
 
 class AnIQAThread(IQANode):
